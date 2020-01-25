@@ -4,17 +4,17 @@ Purpose:
 When they are a lot of repo and a lot of branches to manage,
 you have to put the git commands with the name of the branch on it,
 checkout, commit, push, create pr, delete branch,
-it take time, and you have to list the branches you use
+it take time, and you have to list the branches you use.
 
 The goal of this script is for each repo to list the branches you work on,
-select a branch and then select the action you want to do
+select a branch and then select the action you want to do.
 
 At start you create your branch and put params on the branch (feat or fix, scope, NotionID),
 all of this params will be used to create the commits,
-after this, the script create the branch and save the params
+after this, the script create the branch and save the params.
 
 On the nexts launch, it detect the branch and load the params,
-you can select another branch and the script will git checkout to the branch
+you can select another branch and the script will git checkout to the branch.
 
 
 When your on the branch you can do actions :
@@ -43,6 +43,9 @@ Install:
 ---
 
 Install python3, virtualenv and pip3
+
+```
+
 python3 -m virtualenv env
 source env/bin/activate
 
@@ -53,7 +56,9 @@ pip3 install PyGithub
 pip3 install slackclient
 pip3 install notion
 
-./branch_action.sh
+ ./branch_action.sh
+ 
+```
 Create alias so you can launch it from anywhere
 
 
