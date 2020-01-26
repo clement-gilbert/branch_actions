@@ -96,7 +96,7 @@ Create alias so you can launch it from anywhere
 
 Set-Up:
 ---
-Populate branch_actions_vars file:
+Populate vars.py:
 
   - Put the branch list file path on BRANCH_FILE
 
