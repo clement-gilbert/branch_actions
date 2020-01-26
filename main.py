@@ -767,7 +767,7 @@ def send_commits_to_card():
   # Get card's commits
   repo_name = _actual_repo_details["repo_name"]
   branch = _actual_branch
-  search = "(N: {} )".format(notionID)
+  search = notionID
   number = 50
 
   commits = git_get_lasts_commits(branch, number=number)
@@ -794,10 +794,25 @@ def send_commits_to_card():
   for commit in commits_of_cards:
     txt = ""
     short_commit_id = commit["id"][0:8]
+    commit_message = commit["message"]
     commit_url = "{}{}/commit/{}".format(GITHUB_BASE_URL, repo_name, short_commit_id)
     txt_commit_id = notion_create_link(short_commit_id, commit_url, "Github")
     txt_commit_id = NOTION_BOLD.format(txt_commit_id)
-    txt_commit_message = commit["message"].replace(search, "")
+
+    #From abc, remove (..., N:'abc', ...) in the commit message
+    pos_start_parenthesis = -1
+    pos_end_parenthesis = -1
+    pos_cardID = commit_message.find(search)
+    if pos_cardID != -1:
+      pos_start_parenthesis = commit_message.rfind('(', 0, pos_cardID)
+      pos_end_parenthesis = commit_message.find(')', pos_cardID)
+      if pos_end_parenthesis != -1:
+        pos_end_parenthesis += 1
+    if pos_start_parenthesis != -1 and pos_end_parenthesis != -1:
+      txt_commit_message = commit_message[:pos_start_parenthesis] + commit_message[pos_end_parenthesis:]
+    else:
+      txt_commit_message = commit_message
+
     txt += txt_commit_id
     txt += " - "
     txt += commit["time"]
@@ -856,9 +871,14 @@ def create_commit_message(commit_descr, params):
 
   commit_message += commit_descr
 
+  txt_card_links = ""
   value_notionID = get_value_of_param("notionID", params)
   if value_notionID != False:
-    commit_message += " (N: " + value_notionID + " )"
+    if txt_card_links != "":
+      txt_card_links += ", "
+    txt_card_links += "N:'{}'".format(value_notionID)
+  if txt_card_links != "":
+    commit_message += " ({})".format(txt_card_links)
 
   commit_message = commit_message.replace('"', '')
   commit_message = '"' + commit_message + '"'
