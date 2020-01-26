@@ -5,6 +5,7 @@ import os
 import re
 import copy
 import time
+import getpass
 
 # External dependencies
 import inquirer
@@ -96,7 +97,7 @@ Create alias so you can launch it from anywhere
 
 Set-Up:
 ---
-Populate branch_actions_vars file:
+Populate vars.py:
 
   - Put the branch list file path on BRANCH_FILE
 
@@ -302,23 +303,43 @@ STEP_ACTIONS_CHOICES = [
 
 # Confirms
 GENERAL_MESSAGE_SURE = "Sure? (y)"
-GENERAL_MESSAGE_CONTINUE = "Continue? (y)"
+GENERAL_MESSAGE_ASK_CONTINUE = "Continue?"
+GENERAL_MESSAGE_CONTINUE = "Continue [Enter]"
 
 MESSAGE_CONFIRM_CREATE_BRANCH = "Create? (y)"
 MESSAGE_CONFIRM_DELETE_BRANCH = "Delete? (y)"
 
 
 
+# Logs
+SHOW_LOADING_LOGS = True
+LOG_STEP_ACTUAL = 0
+LOG_STEPS_TOTAL = 5
+def clear():
+  os.system('clear')
+def send_log(data):
+  global LOG_STEP_ACTUAL
+  LOG_STEP_ACTUAL += 1
+  txt = "{}/{} {}".format(LOG_STEP_ACTUAL, LOG_STEPS_TOTAL, data["message"])
+  if SHOW_LOADING_LOGS:
+    clear()
+    print(txt)
+
+
+send_log({"message": "Vars loaded"})
 # Github
+send_log({"message": "Loading Github"})
 GITHUB_OBJ_GIT = Github(GITHUB_TOKEN)
 GITHUB_OBJ_ORG = GITHUB_OBJ_GIT.get_organization(GITHUB_ORGANIZATION)
 
 
 # Slack
+send_log({"message": "Loading Slack"})
 SLACK_OBJ_SLACK = slack.WebClient(token=SLACK_TOKEN)
 
 
 # Notion
+send_log({"message": "Loading Notion"})
 NOTION_OBJ = NotionClient(token_v2=NOTION_TOKEN)
 
 
@@ -519,7 +540,7 @@ def go_step_set_branch_name():
 def go_step_show_summary():
   text = var_to_txt(_branch_list)
   print(text)
-  resp_confirm = ask_confirm("Show summary, Continue?")
+  resp_confirm = ask_confirm("Show summary, " + GENERAL_MESSAGE_ASK_CONTINUE)
 
   if resp_confirm:
     next_step = STEP_CHOOSE_LIST_GENERAL
@@ -557,19 +578,19 @@ def go_step_commit():
 
     write_before_step()
     print('The commit will be: ' + commit_message)
-    resp_confirm = ask_confirm('Continue?')
+    resp_confirm = ask_confirm(GENERAL_MESSAGE_ASK_CONTINUE)
     if resp_confirm:
       git_commit_res = git_commit(commit_message)
       write_before_step()
       print(git_commit_res)
-      ask_press_key("Continue")
+      ask_press_key(GENERAL_MESSAGE_CONTINUE)
       go_step(STEP_CHOOSE_LIST_ACTIONS)
     else:
       go_step(STEP_CHOOSE_LIST_ACTIONS)
 
 
 def go_step_add_commits_to_card():
-  resp_confirm = ask_confirm("Refresh commits on card, Confirm?")
+  resp_confirm = ask_confirm("Refresh commits on card, " + GENERAL_MESSAGE_ASK_CONTINUE)
 
   if resp_confirm:
     res_send_commits_to_card = send_commits_to_card()
@@ -582,14 +603,14 @@ def go_step_add_commits_to_card():
       text += res_send_commits_to_card["data"]["notion_link"]
     write_before_step()
     print(text)
-    ask_press_key("Continue")
+    ask_press_key(GENERAL_MESSAGE_CONTINUE)
     go_step(STEP_CHOOSE_LIST_ACTIONS)
   else:
     go_step(STEP_CHOOSE_LIST_ACTIONS)
 
 
 def go_step_push_branch():
-  resp_confirm = ask_confirm("Push branch, Confirm?")
+  resp_confirm = ask_confirm("Push branch, " + GENERAL_MESSAGE_ASK_CONTINUE)
 
   if resp_confirm:
     git_push_branch(_actual_branch)
@@ -599,7 +620,7 @@ def go_step_push_branch():
 
 
 def go_step_pr_branch():
-  resp_confirm = ask_confirm("PR branch, Confirm?")
+  resp_confirm = ask_confirm("PR branch, " + GENERAL_MESSAGE_ASK_CONTINUE)
 
   if resp_confirm:
     do_pr(_actual_branch)
@@ -609,7 +630,7 @@ def go_step_pr_branch():
 
 
 def go_step_delete_branch():
-  resp_confirm = ask_confirm("Delete branch, Confirm?")
+  resp_confirm = ask_confirm("Delete branch, " + GENERAL_MESSAGE_ASK_CONTINUE)
 
   if resp_confirm:
     delete_branch(_actual_branch)
@@ -767,7 +788,7 @@ def send_commits_to_card():
   # Get card's commits
   repo_name = _actual_repo_details["repo_name"]
   branch = _actual_branch
-  search = "(N: {} )".format(notionID)
+  search = notionID
   number = 50
 
   commits = git_get_lasts_commits(branch, number=number)
@@ -794,10 +815,25 @@ def send_commits_to_card():
   for commit in commits_of_cards:
     txt = ""
     short_commit_id = commit["id"][0:8]
+    commit_message = commit["message"]
     commit_url = "{}{}/commit/{}".format(GITHUB_BASE_URL, repo_name, short_commit_id)
     txt_commit_id = notion_create_link(short_commit_id, commit_url, "Github")
     txt_commit_id = NOTION_BOLD.format(txt_commit_id)
-    txt_commit_message = commit["message"].replace(search, "")
+
+    #From abc, remove (..., N:'abc', ...) in the commit message
+    pos_start_parenthesis = -1
+    pos_end_parenthesis = -1
+    pos_cardID = commit_message.find(search)
+    if pos_cardID != -1:
+      pos_start_parenthesis = commit_message.rfind('(', 0, pos_cardID)
+      pos_end_parenthesis = commit_message.find(')', pos_cardID)
+      if pos_end_parenthesis != -1:
+        pos_end_parenthesis += 1
+    if pos_start_parenthesis != -1 and pos_end_parenthesis != -1:
+      txt_commit_message = commit_message[:pos_start_parenthesis] + commit_message[pos_end_parenthesis:]
+    else:
+      txt_commit_message = commit_message
+
     txt += txt_commit_id
     txt += " - "
     txt += commit["time"]
@@ -856,9 +892,14 @@ def create_commit_message(commit_descr, params):
 
   commit_message += commit_descr
 
+  txt_card_links = ""
   value_notionID = get_value_of_param("notionID", params)
   if value_notionID != False:
-    commit_message += " (N: " + value_notionID + " )"
+    if txt_card_links != "":
+      txt_card_links += ", "
+    txt_card_links += "N:'{}'".format(value_notionID)
+  if txt_card_links != "":
+    commit_message += " ({})".format(txt_card_links)
 
   commit_message = commit_message.replace('"', '')
   commit_message = '"' + commit_message + '"'
@@ -1267,7 +1308,7 @@ def ask_confirm(title):
 
 def ask_press_key(title):
   txt = "[{}] {}: ".format(colored("?", "yellow"), title)
-  input(txt)
+  getpass.getpass(txt)
 
 
 
@@ -1358,10 +1399,6 @@ def launch_command(command):
   return os.popen(command).read()
 
 
-def clear():
-  os.system('clear')
-
-
 def error(text):
   print(text)
   exit()
@@ -1397,6 +1434,7 @@ def main():
 
 
 # Start script
+send_log({"message": "All loaded"})
 main()
 
 

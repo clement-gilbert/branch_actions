@@ -44,8 +44,8 @@ Install:
 
 Install python3, virtualenv and pip3
 
+Create an env, install the dependencies, run the script:
 ```
-
 python3 -m virtualenv env
 source env/bin/activate
 
@@ -57,8 +57,8 @@ pip3 install slackclient
 pip3 install notion
 
  ./branch_action.sh
- 
 ```
+
 Create alias so you can launch it from anywhere
 
 
@@ -67,7 +67,7 @@ Create alias so you can launch it from anywhere
 
 Set-Up:
 ---
-Populate branch_actions_vars file:
+Populate vars.py:
 
   - Put the branch list file path on BRANCH_FILE
 
