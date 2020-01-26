@@ -112,6 +112,8 @@ Populate vars.py:
 
  - Fill the other vars
 
+ - Run the script with LOADING_CHECKS = True to check the credentials. You can set it to False to speed up the launch
+
 
 
 '''
@@ -311,36 +313,67 @@ MESSAGE_CONFIRM_DELETE_BRANCH = "Delete? (y)"
 
 
 
+
+
+
+
+
+
+# ---------------------
+# Connection with 3th parties
+# ---------------------
+
 # Logs
-SHOW_LOADING_LOGS = True
-LOG_STEP_ACTUAL = 0
+LOG_STEPS_ACTUAL = 0
 LOG_STEPS_TOTAL = 5
+
 def clear():
   os.system('clear')
+
 def send_log(data):
-  global LOG_STEP_ACTUAL
-  LOG_STEP_ACTUAL += 1
-  txt = "{}/{} {}".format(LOG_STEP_ACTUAL, LOG_STEPS_TOTAL, data["message"])
-  if SHOW_LOADING_LOGS:
+  global LOG_STEPS_ACTUAL
+  LOG_STEPS_ACTUAL += 1
+  txt = "{}/{} {}".format(LOG_STEPS_ACTUAL, LOG_STEPS_TOTAL, data["message"])
+  if LOADING_CHECKS:
     clear()
     print(txt)
 
 
-send_log({"message": "Vars loaded"})
 # Github
-send_log({"message": "Loading Github"})
-GITHUB_OBJ_GIT = Github(GITHUB_TOKEN)
-GITHUB_OBJ_ORG = GITHUB_OBJ_GIT.get_organization(GITHUB_ORGANIZATION)
+GITHUB_OBJ_GIT = None
+GITHUB_OBJ_ORG = None
+def github_connect():
+  global GITHUB_OBJ_GIT, GITHUB_OBJ_ORG
+  if GITHUB_OBJ_GIT == None:
+    GITHUB_OBJ_GIT = Github(GITHUB_TOKEN)
+    GITHUB_OBJ_ORG = GITHUB_OBJ_GIT.get_organization(GITHUB_ORGANIZATION)
 
 
 # Slack
-send_log({"message": "Loading Slack"})
-SLACK_OBJ_SLACK = slack.WebClient(token=SLACK_TOKEN)
+SLACK_OBJ_SLACK = None
+def slack_connect():
+  global SLACK_OBJ_SLACK
+  if SLACK_OBJ_SLACK == None:
+    SLACK_OBJ_SLACK = slack.WebClient(token=SLACK_TOKEN)
 
 
 # Notion
-send_log({"message": "Loading Notion"})
-NOTION_OBJ = NotionClient(token_v2=NOTION_TOKEN)
+NOTION_OBJ = None
+def notion_connect():
+  global NOTION_OBJ
+  if NOTION_OBJ == None:
+    NOTION_OBJ = NotionClient(token_v2=NOTION_TOKEN)
+
+
+if LOADING_CHECKS:
+  send_log({"message": "Vars loaded"})
+  send_log({"message": "Connect to Github"})
+  github_connect()
+  send_log({"message": "Connect to Slack"})
+  slack_connect()
+  slack_test_connection = SLACK_OBJ_SLACK.users_list()
+  send_log({"message": "Connect to Notion"})
+  notion_connect()
 
 
 
@@ -1169,7 +1202,7 @@ def git_pull():
 # ---------------------
 
 def github_create_pull_request(repo, head, base, title, description):
-  global GITHUB_OBJ_ORG
+  github_connect()
 
   if not title:
     title = "Auto-generated pull request."
@@ -1194,6 +1227,7 @@ def github_create_pull_request(repo, head, base, title, description):
 # ---------------------
 
 def slack_send_message(channel, message):
+  slack_connect()
   SLACK_OBJ_SLACK.chat_postMessage(
       channel=channel,
       text=message,
@@ -1202,6 +1236,7 @@ def slack_send_message(channel, message):
 
 
 def slack_display_name_to_id(user_display_name):
+  slack_connect()
   users_list = SLACK_OBJ_SLACK.users_list()
 
   userID = None
@@ -1243,6 +1278,7 @@ def notion_add_block(cardID, text, block_type):
 
 
 def notion_get_card(cardID):
+  notion_connect()
   url = notion_get_card_url(cardID)
   page = NOTION_OBJ.get_block(url)
   return page

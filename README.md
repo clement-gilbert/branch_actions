@@ -82,4 +82,6 @@ Populate vars.py:
 
  - Fill the other vars
 
+ - Run the script with LOADING_CHECKS = True to check the credentials. You can set it to False to speed up the launch
+
 
