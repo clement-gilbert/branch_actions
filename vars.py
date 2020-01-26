@@ -3,15 +3,15 @@
 # Config Vars Mains
 # ---------------------
 
-
 BRANCH_FILE = "./Branches"
 
 REPO_LIST = [
   { "text_name": "Api", "repo_name": "apiv3", "repo_type": "Api", "dev_branch": "v3_debug", "parent_folder_contains": None }
   ]
 
-
 MY_NAME = ""
+
+LOADING_CHECKS = True
 
 
 # Github
@@ -44,5 +44,4 @@ SLACK_CHANNELS = [
 # Firefox: Inspect, then Storage, browse to Cookies
 # Firefox: Inspect, then Application, browse to Cookies
 NOTION_TOKEN = ""
-
 
