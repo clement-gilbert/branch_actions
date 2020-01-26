@@ -5,6 +5,7 @@ import os
 import re
 import copy
 import time
+import getpass
 
 # External dependencies
 import inquirer
@@ -302,7 +303,8 @@ STEP_ACTIONS_CHOICES = [
 
 # Confirms
 GENERAL_MESSAGE_SURE = "Sure? (y)"
-GENERAL_MESSAGE_CONTINUE = "Continue? (y)"
+GENERAL_MESSAGE_ASK_CONTINUE = "Continue?"
+GENERAL_MESSAGE_CONTINUE = "Continue [Enter]"
 
 MESSAGE_CONFIRM_CREATE_BRANCH = "Create? (y)"
 MESSAGE_CONFIRM_DELETE_BRANCH = "Delete? (y)"
@@ -538,7 +540,7 @@ def go_step_set_branch_name():
 def go_step_show_summary():
   text = var_to_txt(_branch_list)
   print(text)
-  resp_confirm = ask_confirm("Show summary, Continue?")
+  resp_confirm = ask_confirm("Show summary, " + GENERAL_MESSAGE_ASK_CONTINUE)
 
   if resp_confirm:
     next_step = STEP_CHOOSE_LIST_GENERAL
@@ -576,19 +578,19 @@ def go_step_commit():
 
     write_before_step()
     print('The commit will be: ' + commit_message)
-    resp_confirm = ask_confirm('Continue?')
+    resp_confirm = ask_confirm(GENERAL_MESSAGE_ASK_CONTINUE)
     if resp_confirm:
       git_commit_res = git_commit(commit_message)
       write_before_step()
       print(git_commit_res)
-      ask_press_key("Continue")
+      ask_press_key(GENERAL_MESSAGE_CONTINUE)
       go_step(STEP_CHOOSE_LIST_ACTIONS)
     else:
       go_step(STEP_CHOOSE_LIST_ACTIONS)
 
 
 def go_step_add_commits_to_card():
-  resp_confirm = ask_confirm("Refresh commits on card, Confirm?")
+  resp_confirm = ask_confirm("Refresh commits on card, " + GENERAL_MESSAGE_ASK_CONTINUE)
 
   if resp_confirm:
     res_send_commits_to_card = send_commits_to_card()
@@ -601,14 +603,14 @@ def go_step_add_commits_to_card():
       text += res_send_commits_to_card["data"]["notion_link"]
     write_before_step()
     print(text)
-    ask_press_key("Continue")
+    ask_press_key(GENERAL_MESSAGE_CONTINUE)
     go_step(STEP_CHOOSE_LIST_ACTIONS)
   else:
     go_step(STEP_CHOOSE_LIST_ACTIONS)
 
 
 def go_step_push_branch():
-  resp_confirm = ask_confirm("Push branch, Confirm?")
+  resp_confirm = ask_confirm("Push branch, " + GENERAL_MESSAGE_ASK_CONTINUE)
 
   if resp_confirm:
     git_push_branch(_actual_branch)
@@ -618,7 +620,7 @@ def go_step_push_branch():
 
 
 def go_step_pr_branch():
-  resp_confirm = ask_confirm("PR branch, Confirm?")
+  resp_confirm = ask_confirm("PR branch, " + GENERAL_MESSAGE_ASK_CONTINUE)
 
   if resp_confirm:
     do_pr(_actual_branch)
@@ -628,7 +630,7 @@ def go_step_pr_branch():
 
 
 def go_step_delete_branch():
-  resp_confirm = ask_confirm("Delete branch, Confirm?")
+  resp_confirm = ask_confirm("Delete branch, " + GENERAL_MESSAGE_ASK_CONTINUE)
 
   if resp_confirm:
     delete_branch(_actual_branch)
@@ -1306,7 +1308,7 @@ def ask_confirm(title):
 
 def ask_press_key(title):
   txt = "[{}] {}: ".format(colored("?", "yellow"), title)
-  input(txt)
+  getpass.getpass(txt)
 
 
 
