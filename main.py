@@ -309,16 +309,35 @@ MESSAGE_CONFIRM_DELETE_BRANCH = "Delete? (y)"
 
 
 
+# Logs
+SHOW_LOADING_LOGS = True
+LOG_STEP_ACTUAL = 0
+LOG_STEPS_TOTAL = 5
+def clear():
+  os.system('clear')
+def send_log(data):
+  global LOG_STEP_ACTUAL
+  LOG_STEP_ACTUAL += 1
+  txt = "{}/{} {}".format(LOG_STEP_ACTUAL, LOG_STEPS_TOTAL, data["message"])
+  if SHOW_LOADING_LOGS:
+    clear()
+    print(txt)
+
+
+send_log({"message": "Vars loaded"})
 # Github
+send_log({"message": "Loading Github"})
 GITHUB_OBJ_GIT = Github(GITHUB_TOKEN)
 GITHUB_OBJ_ORG = GITHUB_OBJ_GIT.get_organization(GITHUB_ORGANIZATION)
 
 
 # Slack
+send_log({"message": "Loading Slack"})
 SLACK_OBJ_SLACK = slack.WebClient(token=SLACK_TOKEN)
 
 
 # Notion
+send_log({"message": "Loading Notion"})
 NOTION_OBJ = NotionClient(token_v2=NOTION_TOKEN)
 
 
@@ -1378,10 +1397,6 @@ def launch_command(command):
   return os.popen(command).read()
 
 
-def clear():
-  os.system('clear')
-
-
 def error(text):
   print(text)
   exit()
@@ -1417,6 +1432,7 @@ def main():
 
 
 # Start script
+send_log({"message": "All loaded"})
 main()
 
 
