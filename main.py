@@ -88,7 +88,7 @@ pip3 install PyGithub
 pip3 install slackclient
 pip3 install notion
 
-./branch_action.sh
+./branch_actions.sh
 Create alias so you can launch it from anywhere
 
 
