@@ -539,9 +539,9 @@ def go_step_set_branch_name():
   global _actual_branch
 
   type_question_list = []
+  type_question_list.append("")
   for emoji in TYPES_EMOJIS:
     type_question_list.append(emoji["display_name"])
-  type_question_list.append("")
   type_title = "Choose type"
 
   branch_name = ask_text("Enter the new branch name", BRANCH_REGEX)
@@ -552,7 +552,7 @@ def go_step_set_branch_name():
 
   commit_type = ""
   for emoji in TYPES_EMOJIS:
-    if emoji["display_name"] == commit_type:
+    if emoji["display_name"] == commit_type_display_name:
       commit_type = emoji["id"]
 
   params = []
