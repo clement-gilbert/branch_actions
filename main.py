@@ -205,6 +205,8 @@ NOTION_LINK = '[{}]({} "{}")'
 NOTION_ITALIC = "*{}*"
 NOTION_BOLD = "**{}**"
 NOTION_ITALIC_BOLD = "***{}***"
+NOTION_REPORT_TITLE = "Commits of {} on repo {} from branch {}"
+
 
 
 
@@ -835,12 +837,12 @@ def send_commits_to_card():
 
   # Create text
     # Remove last writes of commits on Notion
-  notion_remove_commit_report(notionID)
+  notion_remove_commit_report(notionID, MY_NAME, repo_name, branch)
 
     # Add header to Notion
   full_txt = ""
   txt = ""
-  txt += "Commits of {} from branch {}".format(MY_NAME, branch)
+  txt += NOTION_REPORT_TITLE.format(MY_NAME, repo_name, branch)
   block_type = "SUB_HEADER"
   notion_add_block(notionID, txt, block_type)
   full_txt += txt + "\n"
@@ -887,9 +889,9 @@ def send_commits_to_card():
   return res
 
 
-def notion_remove_commit_report(cardID):
+def notion_remove_commit_report(cardID, name, repo, branch):
   page = notion_get_card(cardID)
-  search_start_header = "Commits of {} from branch ".format(MY_NAME)
+  search_start_header = NOTION_REPORT_TITLE.format(name, repo, branch)
   search_start_commit = "**["
   header_found = False
 
