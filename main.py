@@ -6,6 +6,7 @@ import re
 import copy
 import time
 import getpass
+import urllib
 
 # External dependencies
 import inquirer
@@ -255,6 +256,11 @@ TYPES_EMOJIS = [
 {"display_name": "Configuration files", "id": "wrench", "emoji": ":wrench:"},
 {"display_name": "Package.json in JS", "id": "package", "emoji": ":package:"},
 {"display_name": "Accessibility", "id": "wheelchair", "emoji": ":wheelchair:"}
+]
+
+# Url encoding
+URL_ENCODING = [
+  {"in": "-", "out": "%2D"}
 ]
 
 
@@ -1293,6 +1299,7 @@ def notion_get_card_url(cardID):
 
 
 def notion_create_link(txt, url, hover_txt):
+  url = url_encode(url)
   link_txt = NOTION_LINK.format(txt, url, hover_txt)
   return link_txt
 
@@ -1432,6 +1439,13 @@ def get_value_of_param(searched_key, params):
     if param["key"] == searched_key:
       value = param["value"]
   return value
+
+
+def url_encode(txt):
+  for item_encoding in URL_ENCODING:
+    txt = txt.replace(item_encoding["in"], item_encoding["out"])
+
+  return txt
 
 
 def launch_command(command):
