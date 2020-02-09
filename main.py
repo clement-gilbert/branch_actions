@@ -788,6 +788,7 @@ def create_branch(in_branch):
 
   dev_branch = _actual_repo_details["dev_branch"]
   git_go_branch(dev_branch)
+  git_pull()
 
   git_create_branch(in_branch)
 
